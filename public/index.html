@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="wordCloudCanvas" width="500" height="500"></canvas>
+
+    <div>
+        <h3>Where are you From ? </h3>
+
+        <form name="myForm" id="myForm" action="">
+            <label for="your_answer">Answer
+                <input type="text" id="your_answer" name="your_answer">
+            </label>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.3/src/wordcloud2.min.js"></script>
+    <script>
+        const socket = new WebSocket("ws://localhost:3000");
+        const myWordCloud = { list: [] };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "init") {
+            // replace with the existing word list from server
+            myWordCloud.list = data.list;
+            } else if (data.type === "update") {
+            // add the new word to list
+            myWordCloud.list.push([data.word, data.weight]);
+            }
+
+            // re-render word cloud
+            WordCloud(document.getElementById("wordCloudCanvas"), myWordCloud);
+        };
+
+        document.getElementById("myForm").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const name = document.getElementById("your_answer").value.trim();
+            if (name) {
+            socket.send(
+                JSON.stringify({
+                word: name,
+                weight: Math.floor(Math.random() * 60) + 10,
+                })
+            );
+            document.getElementById("your_answer").value = "";
+            }
+        });
+
+        WordCloud(document.getElementById("wordCloudCanvas"), myWordCloud);
+        </script>
+
+
+
+
+
+
+
+</body>
+</html>
